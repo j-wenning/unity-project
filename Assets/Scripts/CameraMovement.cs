@@ -5,7 +5,10 @@ public class CameraMovement : MonoBehaviour
     [SerializeField]
     private GameObject m_Player;
 
-    public float m_Speed;
+    [SerializeField]
+    private float m_Distance;
+    [SerializeField]
+    private float m_Time;
 
     private Vector3 mNewPos;
 
@@ -19,20 +22,20 @@ public class CameraMovement : MonoBehaviour
     void Update()
     {
         mNewPos.y += Input.mousePosition.y >= Screen.height
-            ? m_Speed
+            ? m_Distance
             : Input.mousePosition.y <= 0
-            ? -m_Speed
+            ? -m_Distance
             : 0;
         mNewPos.x += Input.mousePosition.x >= Screen.width
-            ? m_Speed
+            ? m_Distance
             : Input.mousePosition.x <= 0
-            ? -m_Speed
+            ? -m_Distance
             : 0;
         if (Input.GetButton("Jump"))
         {
-            mNewPos = m_Player.transform.position;
-            mNewPos.z = transform.position.z;
+            mNewPos.x = m_Player.transform.position.x;
+            mNewPos.y = m_Player.transform.position.y;
         }
-        transform.position = mNewPos;
+        transform.position = Vector3.Lerp(transform.position, mNewPos, m_Time);
     }
 }
