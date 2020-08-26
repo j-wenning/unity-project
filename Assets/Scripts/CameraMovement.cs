@@ -14,13 +14,11 @@ public class CameraMovement : MonoBehaviour
 
     private Vector3 mNewPos;
 
-    // Start is called before the first frame update
     void Start()
     {
         mNewPos = transform.position;
     }
 
-    // Update is called once per frame
     void Update()
     {
         Debug.Log(Screen.height + " " + Input.mousePosition);
