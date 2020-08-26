@@ -21,7 +21,6 @@ public class CameraMovement : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(Screen.height + " " + Input.mousePosition);
         mNewPos.y += Input.mousePosition.y >= Screen.height - m_BorderWidth
             ? m_Distance
             : Input.mousePosition.y <= 0 + m_BorderWidth
