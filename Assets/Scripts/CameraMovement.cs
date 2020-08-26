@@ -10,7 +10,7 @@ public class CameraMovement : MonoBehaviour
     [SerializeField]
     private float m_Time = 0.1f;
     [SerializeField, Tooltip("Distance from screen edge to activate camera movement")]
-    private int m_BorderWidth = 10;
+    private int m_BorderWidth = 25;
 
     private Vector3 mNewPos;
 
@@ -23,6 +23,7 @@ public class CameraMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Debug.Log(Screen.height + " " + Input.mousePosition);
         mNewPos.y += Input.mousePosition.y >= Screen.height - m_BorderWidth
             ? m_Distance
             : Input.mousePosition.y <= 0 + m_BorderWidth
