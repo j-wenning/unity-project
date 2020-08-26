@@ -33,8 +33,8 @@ public class CameraMovement : MonoBehaviour
             : 0;
         if (Input.GetButton("Jump"))
         {
-            mNewPos.x = m_Player.transform.position.x;
-            mNewPos.y = m_Player.transform.position.y;
+            mNewPos = m_Player.transform.position;
+            mNewPos.z = transform.position.z;
         }
         transform.position = Vector3.Lerp(transform.position, mNewPos, m_Time);
     }
