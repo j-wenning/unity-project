@@ -3,7 +3,7 @@
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField]
-    private float m_MoveSpeed;
+    private float m_MoveSpeed = 0.05f;
 
     private Vector3 mNewPos;
 
