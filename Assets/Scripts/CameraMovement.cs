@@ -6,9 +6,9 @@ public class CameraMovement : MonoBehaviour
     private GameObject m_Player;
 
     [SerializeField]
-    private float m_Distance;
+    private float m_Distance = 0.05f;
     [SerializeField]
-    private float m_Time;
+    private float m_Time = 0.1f;
 
     private Vector3 mNewPos;
 
