@@ -3,22 +3,40 @@
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField]
-    private float m_MoveSpeed = 0.05f;
+    private Rigidbody2D m_Rigidbody;
 
-    private Vector3 mNewPos;
+    [SerializeField, Tooltip("Player speed (scaled by delta time)")]
+    private float m_MoveSpeed = 800f;
+    [SerializeField, Tooltip("Minimum required distance to move player (prevents jittering)")]
+    private float m_MoveThreshold = 0.2f;
 
-    void Start()
+    private Vector2 mNewPos;
+    private Vector2 mPrevPos;
+    private Vector2 mPosDiff;
+    private Vector2 mNewNormal;
+
+    private void Start()
     {
         mNewPos = transform.position;
     }
 
-    void Update()
+    private void FixedUpdate()
     {
-        if (Input.GetMouseButton(1))
-        {
-            mNewPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mNewPos.z = transform.position.z;
-        }
-        transform.position = Vector3.MoveTowards(transform.position, mNewPos, m_MoveSpeed);
+        SetNewPos(
+            Input.GetMouseButton(1)
+            ? (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition)
+            : mNewPos
+        );
+    }
+
+    private void SetNewPos(Vector2 pos)
+    {
+        mNewPos = pos;
+        mPrevPos = transform.position;
+        mPosDiff = (mNewPos - mPrevPos);
+        mNewNormal = mPosDiff.normalized;
+        m_Rigidbody.velocity = mPosDiff.magnitude > m_MoveThreshold
+            ? mNewNormal * m_MoveSpeed * Time.deltaTime
+            : Vector2.zero;
     }
 }
