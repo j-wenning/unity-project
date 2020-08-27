@@ -33,7 +33,7 @@ public class PlayerMovement : MonoBehaviour
     {
         mNewPos = pos;
         mPrevPos = transform.position;
-        mPosDiff = (mNewPos - mPrevPos);
+        mPosDiff = mNewPos - mPrevPos;
         mNewNormal = mPosDiff.normalized;
         m_Rigidbody.velocity = mPosDiff.magnitude > m_MoveThreshold
             ? mNewNormal * m_MoveSpeed * Time.deltaTime
