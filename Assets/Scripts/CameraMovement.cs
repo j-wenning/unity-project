@@ -14,12 +14,12 @@ public class CameraMovement : MonoBehaviour
 
     private Vector3 mNewPos;
 
-    void Start()
+    private void Start()
     {
         mNewPos = transform.position;
     }
 
-    void Update()
+    private void Update()
     {
         mNewPos.y += Input.mousePosition.y >= Screen.height - m_BorderWidth
             ? m_Distance
