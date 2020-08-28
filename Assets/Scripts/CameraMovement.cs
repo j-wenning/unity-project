@@ -16,26 +16,26 @@ public class CameraMovement : MonoBehaviour
 
     private void Start()
     {
-        mNewPos = transform.position;
+        mNewPos = transform.localPosition;
     }
 
     private void Update()
     {
         mNewPos.y += Input.mousePosition.y >= Screen.height - m_BorderWidth
             ? m_Distance
-            : Input.mousePosition.y <= 0 + m_BorderWidth
+            : Input.mousePosition.y <= m_BorderWidth
             ? -m_Distance
             : 0;
         mNewPos.x += Input.mousePosition.x >= Screen.width - m_BorderWidth
             ? m_Distance
-            : Input.mousePosition.x <= 0 + m_BorderWidth
+            : Input.mousePosition.x <= m_BorderWidth
             ? -m_Distance
             : 0;
         if (Input.GetButton("Jump"))
         {
-            mNewPos = m_Player.transform.position;
-            mNewPos.z = transform.position.z;
+            mNewPos = m_Player.transform.localPosition;
+            mNewPos.z = transform.localPosition.z;
         }
-        transform.position = Vector3.Lerp(transform.position, mNewPos, m_Time);
+        transform.position = Vector3.Lerp(transform.localPosition, mNewPos, m_Time);
     }
 }

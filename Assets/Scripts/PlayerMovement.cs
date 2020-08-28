@@ -14,6 +14,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 mPrevPos;
     private Vector2 mPosDiff;
     private Vector2 mNewNormal;
+    private Vector2 mVelocity;
+    private float mScaledMoveSpeed;
 
     private void Start()
     {
@@ -22,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        mScaledMoveSpeed = m_MoveSpeed * Time.deltaTime;
         SetNewPos(
             Input.GetMouseButton(1)
             ? (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition)
@@ -32,11 +35,12 @@ public class PlayerMovement : MonoBehaviour
     private void SetNewPos(Vector2 pos)
     {
         mNewPos = pos;
-        mPrevPos = transform.position;
-        mPosDiff = mNewPos - mPrevPos;
-        mNewNormal = mPosDiff.normalized;
-        m_Rigidbody.velocity = mPosDiff.magnitude > m_MoveThreshold
-            ? mNewNormal * m_MoveSpeed * Time.deltaTime
-            : Vector2.zero;
+        mPrevPos = transform.localPosition;
+        mPosDiff.Set(mNewPos.x - mPrevPos.x, mNewPos.y - mPrevPos.y);
+        mNewNormal.Set(mPosDiff.normalized.x, mPosDiff.normalized.y);
+        mVelocity = m_Rigidbody.velocity;
+        if (mPosDiff.magnitude <= m_MoveThreshold) mVelocity.Set(0, 0);
+        else mVelocity.Set(mNewNormal.x * mScaledMoveSpeed, mNewNormal.y * mScaledMoveSpeed);
+        m_Rigidbody.velocity = mVelocity;
     }
 }
