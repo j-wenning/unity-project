@@ -22,9 +22,9 @@ public class Chunk : MonoBehaviour
     {
         foreach (GameObject chunk in m_AdjChunks)
         {
-            if (!GameObject.Find($"/Grid/{chunk.name}"))
+            if (!GameObject.Find($"/{chunk.name}"))
             {
-                mNewChunk = Instantiate(chunk, transform.parent);
+                mNewChunk = Instantiate(chunk);
                 mNewChunk.name = mNewChunk.name.Replace("(Clone)", "");
                 mNewChunk = null;
             }
@@ -36,7 +36,7 @@ public class Chunk : MonoBehaviour
         mNewChunk = newChunk.gameObject;
         foreach (GameObject chunk in m_AdjChunks.Except(newChunk.m_AdjChunks).Where(ExcludeCurrent))
         {
-            Destroy(GameObject.Find($"/Grid/{chunk.name}"));
+            Destroy(GameObject.Find($"/{chunk.name}"));
         }
         mNewChunk = null;
     }
