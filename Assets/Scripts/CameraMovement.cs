@@ -19,7 +19,7 @@ public class CameraMovement : MonoBehaviour
         mNewPos = transform.localPosition;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         mNewPos.y += Input.mousePosition.y >= Screen.height - m_BorderWidth
             ? m_Distance
