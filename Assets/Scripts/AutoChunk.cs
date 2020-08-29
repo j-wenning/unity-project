@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using System.Linq;
 
 public class AutoChunk : MonoBehaviour
 {
@@ -22,7 +24,7 @@ public class AutoChunk : MonoBehaviour
 
     public void CreateChunkPrefabs()
     {
-        foreach(Transform child in transform)
+        foreach(Transform child in SceneManager.GetActiveScene().GetRootGameObjects().Select(GetTransform))
         {
             if (child.gameObject.tag == "Chunk")
             {
@@ -47,7 +49,7 @@ public class AutoChunk : MonoBehaviour
 
     public void JoinChunks()
     {
-        foreach (Transform child in transform)
+        foreach (Transform child in SceneManager.GetActiveScene().GetRootGameObjects().Select(GetTransform))
         {
             if (child.tag == "Chunk")
             {
@@ -78,5 +80,10 @@ public class AutoChunk : MonoBehaviour
             mAdjChunks.Add(mAdjChunkPrefab);
             Debug.Log("Joined chunk \"" + collider.gameObject.name + "\" to chunk \"" + mCurrentChunk.name + "\".");
         }
+    }
+
+    private Transform GetTransform(GameObject obj)
+    {
+        return obj.transform;
     }
 }
