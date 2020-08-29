@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class GridInit : MonoBehaviour
+public class ChunkInit : MonoBehaviour
 {
     [SerializeField]
     private GameObject m_StarterChunk;
@@ -10,7 +10,7 @@ public class GridInit : MonoBehaviour
     void Start()
     {
         // eventually set this up to read from the players last chunk theyve been on
-        mChunk = Instantiate(m_StarterChunk, transform);
+        mChunk = Instantiate(m_StarterChunk);
         mChunk.name = mChunk.name.Replace("(Clone)", "");
     }
 }
