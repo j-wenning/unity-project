@@ -1,37 +1,48 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 public class Chunk : MonoBehaviour
 {
     public List<GameObject> m_AdjChunks = new List<GameObject>();
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private GameObject mNewChunk;
+    private Vector3 mUnloadDistance = new Vector3();
+
+    private void Awake()
     {
-        if (collision.gameObject.tag == "Player")
-        {
-            LoadChunks();
-        }
+        mUnloadDistance.Set(
+            transform.localPosition.x + transform.localScale.x,
+            transform.localPosition.y + transform.localScale.y,
+            transform.localPosition.z + transform.localScale.z
+        );
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    public void LoadChunks()
     {
-        if (collision.gameObject.tag == "Player")
-        {
-            UnloadChunks();
-        }
-    }
-
-    private void LoadChunks() {
         foreach (GameObject chunk in m_AdjChunks)
         {
-            if (!GameObject.Find($"/Grid/{chunk.name}(Clone)"))
+            if (!GameObject.Find($"/Grid/{chunk.name}"))
             {
-                Instantiate(chunk, transform.parent);
+                mNewChunk = Instantiate(chunk, transform.parent);
+                mNewChunk.name = mNewChunk.name.Replace("(Clone)", "");
+                mNewChunk = null;
             }
         }
     }
     
-    private void UnloadChunks() {
-        
+    public void UnloadChunks(Chunk newChunk)
+    {
+        mNewChunk = newChunk.gameObject;
+        foreach (GameObject chunk in m_AdjChunks.Except(newChunk.m_AdjChunks).Where(ExcludeCurrent))
+        {
+            Destroy(GameObject.Find($"/Grid/{chunk.name}"));
+        }
+        mNewChunk = null;
+    }
+
+    private bool ExcludeCurrent(GameObject chunk)
+    {
+        return chunk.name != mNewChunk.name;
     }
 }
