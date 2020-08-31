@@ -10,7 +10,7 @@ public class ChunkInit : MonoBehaviour
     void Start()
     {
         // eventually set this up to read from the players last chunk theyve been on
-        mChunk = Instantiate(m_StarterChunk);
+        mChunk = Instantiate(m_StarterChunk, GameObject.Find("/Grid/Tilemap").transform);
         mChunk.name = mChunk.name.Replace("(Clone)", "");
     }
 }

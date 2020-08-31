@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using System.Linq;
 
 public class Chunk : MonoBehaviour
 {
-    public List<GameObject> m_AdjChunks = new List<GameObject>();
+    public GameObject[] m_AdjChunks;
 
-    private GameObject mNewChunk;
+    private GameObject mNewChunk = null;
     private Vector3 mUnloadDistance = new Vector3();
 
     private void Awake()
@@ -22,9 +21,9 @@ public class Chunk : MonoBehaviour
     {
         foreach (GameObject chunk in m_AdjChunks)
         {
-            if (!GameObject.Find($"/{chunk.name}"))
+            if (!GameObject.Find($"/Grid/Tilemap/{chunk.name}"))
             {
-                mNewChunk = Instantiate(chunk);
+                mNewChunk = Instantiate(chunk, transform.parent);
                 mNewChunk.name = mNewChunk.name.Replace("(Clone)", "");
                 mNewChunk = null;
             }
@@ -36,7 +35,8 @@ public class Chunk : MonoBehaviour
         mNewChunk = newChunk.gameObject;
         foreach (GameObject chunk in m_AdjChunks.Except(newChunk.m_AdjChunks).Where(ExcludeCurrent))
         {
-            Destroy(GameObject.Find($"/{chunk.name}"));
+            Destroy(GameObject.Find($"/Grid/Tilemap/{chunk.name}"));
+            Debug.Log(chunk.name);
         }
         mNewChunk = null;
     }
