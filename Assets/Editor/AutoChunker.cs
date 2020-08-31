@@ -4,27 +4,35 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using System.Linq;
 
-public class AutoChunk : MonoBehaviour
+ public class AutoChunker : Editor
 {
-    private PolygonCollider2D mCollider;
-    private List<GameObject> mAdjChunks;
-    private List<Collider2D> mCollisions = new List<Collider2D>();
-    private ContactFilter2D mFilter = new ContactFilter2D();
-    private GameObject mOwnPrefab;
-    private GameObject mAdjChunkPrefab;
-    private GameObject mCurrentChunk;
-    private string mPrefabName;
+    static PolygonCollider2D mCollider;
+    static List<GameObject> mAdjChunks = new List<GameObject>();
+    static List<Collider2D> mCollisions = new List<Collider2D>();
+    static ContactFilter2D mFilter = new ContactFilter2D();
+    static GameObject mOwnPrefab;
+    static GameObject mAdjChunkPrefab;
+    static GameObject mCurrentChunk;
+    static string mPrefabName;
 
-    public void DeleteChunkPrefabs()
+    [MenuItem("Auto Chunker/Join Chunks")]
+    static void AutoChunk()
+    {
+        if (SceneManager.GetActiveScene().name != "Map Editor") return;
+        DeleteChunkPrefabs();
+        JoinChunks();
+        CreateChunkPrefabs();
+    }
+    static void DeleteChunkPrefabs()
     {
         FileUtil.DeleteFileOrDirectory("Assets/Prefabs/Chunks/");
         FileUtil.DeleteFileOrDirectory("Assets/Prefabs/Chunks.meta");
         AssetDatabase.CreateFolder("Assets/Prefabs", "Chunks");
     }
 
-    public void CreateChunkPrefabs()
+    static void CreateChunkPrefabs()
     {
-        foreach(Transform child in SceneManager.GetActiveScene().GetRootGameObjects().Select(GetTransform))
+        foreach(Transform child in GameObject.Find("/Grid/Tilemap").GetComponentsInChildren<Transform>())
         {
             if (child.gameObject.tag == "Chunk")
             {
@@ -47,9 +55,9 @@ public class AutoChunk : MonoBehaviour
         }
     }
 
-    public void JoinChunks()
+    static void JoinChunks()
     {
-        foreach (Transform child in SceneManager.GetActiveScene().GetRootGameObjects().Select(GetTransform))
+        foreach (Transform child in GameObject.Find("/Grid/Tilemap").GetComponentsInChildren<Transform>())
         {
             if (child.tag == "Chunk")
             {
@@ -58,21 +66,21 @@ public class AutoChunk : MonoBehaviour
         }
     }
 
-    private void GetAdjChunks(GameObject chunk)
+    static void GetAdjChunks(GameObject chunk)
     {
         mCurrentChunk = chunk;
         mOwnPrefab = PrefabUtility.GetCorrespondingObjectFromSource(mCurrentChunk);
         mFilter.useTriggers = true;
-        mAdjChunks = mCurrentChunk.GetComponent<Chunk>().m_AdjChunks;
         mAdjChunks.Clear();
         mCollider = mCurrentChunk.GetComponent<PolygonCollider2D>();
         mCollider.OverlapCollider(mFilter, mCollisions);
         mCollisions.ForEach(AddChunk);
-        mOwnPrefab.GetComponent<Chunk>().m_AdjChunks = mAdjChunks;
+        mOwnPrefab.GetComponent<Chunk>().m_AdjChunks = mAdjChunks.ToArray();
+        PrefabUtility.SavePrefabAsset(mOwnPrefab);
         mCollisions.Clear();
     }
 
-    private void AddChunk(Collider2D collider)
+    static void AddChunk(Collider2D collider)
     {
         if (collider.gameObject.tag == "Chunk")
         {
@@ -82,7 +90,7 @@ public class AutoChunk : MonoBehaviour
         }
     }
 
-    private Transform GetTransform(GameObject obj)
+    static Transform GetTransform(GameObject obj)
     {
         return obj.transform;
     }
