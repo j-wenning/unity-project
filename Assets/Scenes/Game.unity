@@ -2592,6 +2592,9 @@ MonoBehaviour:
   m_Rigidbody: {fileID: 1950582856}
   m_MoveSpeed: 800
   m_MoveThreshold: 0.2
+  m_DashSpeed: 9600
+  m_DashDuration: 0.1
+  m_DashCD: 1
 --- !u!4 &1950582858
 Transform:
   m_ObjectHideFlags: 0
