@@ -13,34 +13,24 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 mNewPos;
     private Vector2 mPrevPos;
     private Vector2 mPosDiff;
-    private Vector2 mNewNormal;
-    private Vector2 mVelocity;
-    private float mScaledMoveSpeed;
 
-    private void Start()
+    private void Awake()
     {
         mNewPos = transform.position;
     }
 
     private void FixedUpdate()
     {
-        mScaledMoveSpeed = m_MoveSpeed * Time.deltaTime;
-        SetNewPos(
-            Input.GetMouseButton(1)
-            ? (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition)
-            : mNewPos
-        );
+        SetNewPos();
     }
 
-    private void SetNewPos(Vector2 pos)
+    private void SetNewPos()
     {
-        mNewPos = pos;
+        if (Input.GetMouseButton(1)) mNewPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mPrevPos = transform.localPosition;
-        mPosDiff.Set(mNewPos.x - mPrevPos.x, mNewPos.y - mPrevPos.y);
-        mNewNormal.Set(mPosDiff.normalized.x, mPosDiff.normalized.y);
-        mVelocity = m_Rigidbody.velocity;
-        if (mPosDiff.magnitude <= m_MoveThreshold) mVelocity.Set(0, 0);
-        else mVelocity.Set(mNewNormal.x * mScaledMoveSpeed, mNewNormal.y * mScaledMoveSpeed);
-        m_Rigidbody.velocity = mVelocity;
+        mPosDiff = mNewPos - mPrevPos;
+        m_Rigidbody.velocity = mPosDiff.magnitude > m_MoveThreshold
+            ? mPosDiff.normalized * m_MoveSpeed * Time.deltaTime
+            : Vector2.zero;
     }
 }
