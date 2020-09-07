@@ -5,6 +5,8 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField]
     private Rigidbody2D m_Rigidbody;
+    [SerializeField]
+    private Animator m_Animator;
 
     [SerializeField, Tooltip("Player speed (scaled by delta time)")]
     private float m_MoveSpeed = 800f;
@@ -21,6 +23,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 mPrevPos;
     private Vector2 mPosDiff;
     private Vector2 mDashVector;
+    private bool mIsMoving;
     private bool mCanDash;
     private float mDashEndTime;
 
@@ -32,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        MoveToClick();
+        MoveToPos();
         StartDash();
     }
 
@@ -41,14 +44,17 @@ public class PlayerMovement : MonoBehaviour
         return Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
-    private void MoveToClick()
+    private void MoveToPos()
     {
+        if (!(m_Animator.GetBool("Walking") || m_Animator.GetBool("Idling"))) return;
         if (Input.GetMouseButton(1)) mNewPos = GetMousePos();
         mPrevPos = transform.localPosition;
         mPosDiff = mNewPos - mPrevPos;
-        m_Rigidbody.velocity = mPosDiff.magnitude > m_MoveThreshold
+        mIsMoving = mPosDiff.magnitude > m_MoveThreshold;
+        m_Rigidbody.velocity = mIsMoving
             ? mPosDiff.normalized * m_MoveSpeed * Time.deltaTime
             : Vector2.zero;
+        m_Animator.SetBool("Walking", mIsMoving);
     }
     private void StartDash()
     {
@@ -58,15 +64,18 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator Dash()
     {
         mCanDash = false;
+        m_Animator.SetBool("Dashing", true);
         mDashVector = (GetMousePos() - (Vector2)transform.position).normalized * m_DashSpeed * Time.deltaTime;
         mDashEndTime = Time.fixedTime + m_DashDuration;
         do
         {
             m_Rigidbody.velocity = mDashVector;
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForFixedUpdate();
         } while (Time.fixedTime < mDashEndTime);
-        // pop dashing state
+        m_Animator.SetBool("Dashing", false);
         m_Rigidbody.velocity = Vector2.zero;
+        mNewPos = transform.position;
+        MoveToPos();
         yield return new WaitForSeconds(m_DashCD);
         mCanDash = true;
     }
