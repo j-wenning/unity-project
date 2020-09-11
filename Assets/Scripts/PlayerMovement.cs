@@ -4,9 +4,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField]
-    private Rigidbody2D m_Rigidbody;
-    [SerializeField]
-    private Animator m_Animator;
+    private PlayerBase m_Base;
 
     [SerializeField, Tooltip("Player speed (scaled by delta time)")]
     private float m_MoveSpeed = 800f;
@@ -24,58 +22,52 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 mPosDiff;
     private Vector2 mDashVector;
     private bool mIsMoving;
-    private bool mCanDash;
+    private bool mCanDash = true;
     private float mDashEndTime;
 
     private void Awake()
     {
         mNewPos = transform.position;
-        mCanDash = true;
     }
 
-    private void FixedUpdate()
+    public void TryMoveToPos()
     {
-        MoveToPos();
-        StartDash();
-    }
-
-    private Vector2 GetMousePos()
-    {
-        return Camera.main.ScreenToWorldPoint(Input.mousePosition);
-    }
-
-    private void MoveToPos()
-    {
-        if (!(m_Animator.GetBool("Walking") || m_Animator.GetBool("Idling"))) return;
-        if (Input.GetMouseButton(1)) mNewPos = GetMousePos();
+        if (!m_Base.m_State.IsTag("Interruptible")) return;
+        if (Input.GetMouseButton(1)) mNewPos = m_Base.m_MousePos;
         mPrevPos = transform.localPosition;
         mPosDiff = mNewPos - mPrevPos;
         mIsMoving = mPosDiff.magnitude > m_MoveThreshold;
-        m_Rigidbody.velocity = mIsMoving
-            ? mPosDiff.normalized * m_MoveSpeed * Time.deltaTime
+        m_Base.m_Rigidbody.velocity = mIsMoving
+            ? mPosDiff.normalized * m_MoveSpeed * m_Base.m_DeltaTime
             : Vector2.zero;
-        m_Animator.SetBool("Walking", mIsMoving);
+        m_Base.m_Animator.SetBool("Walk", mIsMoving);
     }
-    private void StartDash()
+    public void TryDash()
     {
-        if (mCanDash && Input.GetButton("Fire1")) StartCoroutine(Dash());
+        if (mCanDash
+        && Input.GetButton("Fire1")
+        && m_Base.m_State.IsTag("Interruptible"))
+        {
+            StartCoroutine(Dash());
+        }
     }
 
     private IEnumerator Dash()
     {
         mCanDash = false;
-        m_Animator.SetBool("Dashing", true);
-        mDashVector = (GetMousePos() - (Vector2)transform.position).normalized * m_DashSpeed * Time.deltaTime;
-        mDashEndTime = Time.fixedTime + m_DashDuration;
+        m_Base.m_Animator.SetBool("Dash", true);
+        mDashVector = (m_Base.m_MousePos - (Vector2)transform.position).normalized * m_DashSpeed * m_Base.m_DeltaTime;
+        mDashEndTime = m_Base.m_FixedTime + m_DashDuration;
         do
         {
-            m_Rigidbody.velocity = mDashVector;
+            m_Base.m_Rigidbody.velocity = mDashVector;
             yield return new WaitForFixedUpdate();
-        } while (Time.fixedTime < mDashEndTime);
-        m_Animator.SetBool("Dashing", false);
-        m_Rigidbody.velocity = Vector2.zero;
+        }
+        while (m_Base.m_FixedTime < mDashEndTime);
+        m_Base.m_Animator.SetBool("Dash", false);
+        m_Base.m_Rigidbody.velocity = Vector2.zero;
         mNewPos = transform.position;
-        MoveToPos();
+        TryMoveToPos();
         yield return new WaitForSeconds(m_DashCD);
         mCanDash = true;
     }
