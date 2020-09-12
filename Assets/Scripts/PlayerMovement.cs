@@ -6,69 +6,89 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private PlayerBase m_Base;
 
-    [SerializeField, Tooltip("Player speed (scaled by delta time)")]
-    private float m_MoveSpeed = 800f;
-    [SerializeField, Tooltip("Minimum required distance to move player (prevents jittering)")]
-    private float m_MoveThreshold = 0.2f;
+    [SerializeField]
+    private float m_MoveSpeed;
+    [SerializeField, Tooltip("Minimum distance for a player to select to move (prevents jittering)")]
+    private float m_MoveThreshold;
+    [SerializeField, Range(0, 180), Tooltip("Maximum automatic change in trajectory before stopping the player")]
+    private int m_StopAngle;
+    [SerializeField, Tooltip("Minimum speed to not be considered \"stuck\"")]
+    private float m_StuckTolerance;
+    [SerializeField, Tooltip("Number of frames at \"Stuck Tolerance\" required to be determined as \"stuck\"")]
+    private int m_StuckFrames;
     [SerializeField]
     private float m_DashSpeed;
     [SerializeField]
-    private float m_DashDuration;
-    [SerializeField, Tooltip("Dash cooldown")]
-    private float m_DashCD;
+    private float m_DashLength;
+    [SerializeField]
+    private float m_DashCooldown;
 
     private Vector2 mNewPos;
-    private Vector2 mPrevPos;
     private Vector2 mPosDiff;
-    private Vector2 mDashVector;
-    private bool mIsMoving;
+    private Vector2 mOldPosDiff;
+    private int mStuckCount = 0;
+    private bool mIsMoving = false;
+    private bool mIsDashing = false;
     private bool mCanDash = true;
-    private float mDashEndTime;
 
-    private void Awake()
+    private void OnEnable()
     {
-        mNewPos = transform.position;
+        mNewPos = m_Base.m_LocalPos;
     }
 
-    public void TryMoveToPos()
+    public void Move()
     {
-        if (!m_Base.m_State.IsTag("Interruptible")) return;
-        if (Input.GetMouseButton(1)) mNewPos = m_Base.m_MousePos;
-        mPrevPos = transform.localPosition;
-        mPosDiff = mNewPos - mPrevPos;
-        mIsMoving = mPosDiff.magnitude > m_MoveThreshold;
-        m_Base.m_Rigidbody.velocity = mIsMoving
-            ? mPosDiff.normalized * m_MoveSpeed * m_Base.m_DeltaTime
-            : Vector2.zero;
-        m_Base.m_Animator.SetBool("Walk", mIsMoving);
+        mPosDiff = mNewPos - m_Base.m_LocalPos;
+        mIsMoving = Vector2.Angle(mPosDiff, mOldPosDiff) < m_StopAngle
+                    && mPosDiff.magnitude > Mathf.Epsilon;
+        CheckStuck();
+        mIsDashing = mIsDashing && mIsMoving;
+        mOldPosDiff = mPosDiff;
+        m_Base.m_Rigidbody.velocity = mPosDiff.normalized *
+                    (mIsMoving ? (mIsDashing ? m_DashSpeed : m_MoveSpeed) : 0);
+        if (!mIsMoving) mNewPos = m_Base.m_LocalPos;
+        m_Base.m_Animator.SetBool("Walk", mIsMoving && !mIsDashing);
+        m_Base.m_Animator.SetBool("Dash", mIsDashing);
     }
-    public void TryDash()
+
+    private void CheckStuck()
     {
-        if (mCanDash
-        && Input.GetButton("Fire1")
-        && m_Base.m_State.IsTag("Interruptible"))
+        if (m_Base.m_Rigidbody.velocity.magnitude > m_StuckTolerance)
         {
-            StartCoroutine(Dash());
+            mStuckCount = 0;
+        }
+        else if (++mStuckCount > m_StuckFrames)
+        {
+            mStuckCount = 0;
+            mIsMoving = false;
         }
     }
 
-    private IEnumerator Dash()
+    public void GetMoveInput()
     {
-        mCanDash = false;
-        m_Base.m_Animator.SetBool("Dash", true);
-        mDashVector = (m_Base.m_MousePos - (Vector2)transform.position).normalized * m_DashSpeed * m_Base.m_DeltaTime;
-        mDashEndTime = m_Base.m_FixedTime + m_DashDuration;
-        do
+        if (m_Base.m_State.IsTag("Interruptible"))
         {
-            m_Base.m_Rigidbody.velocity = mDashVector;
-            yield return new WaitForFixedUpdate();
+            if (mCanDash && Input.GetButton("Fire1"))
+            {
+                mNewPos = m_Base.m_LocalPos + (m_Base.m_MousePos - m_Base.m_LocalPos).normalized * m_DashLength;
+                mIsDashing = true;
+                mCanDash = false;
+                mPosDiff = mOldPosDiff = Vector2.zero;
+                StartCoroutine(ApplyDashCooldown());
+            }
+            else if (Input.GetMouseButton(1))
+            {
+                if ((m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
+                {
+                    mNewPos = m_Base.m_MousePos;
+                }
+            }
         }
-        while (m_Base.m_FixedTime < mDashEndTime);
-        m_Base.m_Animator.SetBool("Dash", false);
-        m_Base.m_Rigidbody.velocity = Vector2.zero;
-        mNewPos = transform.position;
-        TryMoveToPos();
-        yield return new WaitForSeconds(m_DashCD);
+    }
+
+    private IEnumerator ApplyDashCooldown()
+    {
+        yield return new WaitForSeconds(m_DashCooldown);
         mCanDash = true;
     }
 }
