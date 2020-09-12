@@ -12,20 +12,34 @@ public class PlayerBase : MonoBehaviour
     [HideInInspector]
     public AnimatorStateInfo m_State;
     [HideInInspector]
+    public Vector2 m_LocalPos;
+    [HideInInspector]
+    public Vector2 m_MousePos;
+    [HideInInspector]
     public float m_DeltaTime;
     [HideInInspector]
     public float m_FixedTime;
-    [HideInInspector]
-    public Vector2 m_MousePos;
+
+    private void Awake()
+    {
+        CacheVals();
+        m_Animator.Update(m_DeltaTime);
+    }
 
     private void FixedUpdate()
     {
+        CacheVals();
+        m_Movement.GetMoveInput();
+        m_Movement.Move();
+        m_Action.TryBasicAttack();
+    }
+
+    private void CacheVals()
+    {
         m_FixedTime = Time.fixedTime;
         m_DeltaTime = Time.fixedDeltaTime;
-        m_State = m_Animator.GetCurrentAnimatorStateInfo(m_Animator.GetLayerIndex("Base"));
+        m_LocalPos = transform.localPosition;
         m_MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        m_Movement.TryMoveToPos();
-        m_Movement.TryDash();
-        m_Action.TryBasicAttack();
+        m_State = m_Animator.GetCurrentAnimatorStateInfo(m_Animator.GetLayerIndex("Base"));
     }
 }
