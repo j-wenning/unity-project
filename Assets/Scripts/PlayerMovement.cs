@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -76,12 +76,10 @@ public class PlayerMovement : MonoBehaviour
                 mPosDiff = mOldPosDiff = Vector2.zero;
                 StartCoroutine(ApplyDashCooldown());
             }
-            else if (Input.GetMouseButton(1))
+            // check for dashing should be removed once a proper state machine is created
+            else if (!mIsDashing && Input.GetMouseButton(1) && (m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
             {
-                if ((m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
-                {
-                    mNewPos = m_Base.m_MousePos;
-                }
+                mNewPos = m_Base.m_MousePos;
             }
         }
     }
