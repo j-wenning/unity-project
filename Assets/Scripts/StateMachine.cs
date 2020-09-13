@@ -16,8 +16,7 @@ public class State
         this.name = name;
         m_Tags = new Dictionary<string, bool>();
         foreach (string tag in set) m_Tags.Add(tag, true);
-        if (validate == null) m_Validate = (int arg) => true;
-        else m_Validate = validate;
+        m_Validate = validate ?? ((int arg) => true);
         m_Nodes = nodes;
     }
 
@@ -39,35 +38,35 @@ public class State
     }
 }
 
-public enum StateMachineBehaviour
-{
-    Default,
-    ResetRoot,
-    ResetOne,
-    ThrowError
-}
-
 public class StateMachine
 {
+    public enum Behaviour
+    {
+        Default,
+        ResetRoot,
+        ResetOne,
+        ThrowError
+    }
+
     public State CurrentState { get => m_States.Peek();}
     private State m_RootState;
     private State m_NextState;
     private State m_PrevState;
     private Stack<State> m_States = new Stack<State>();
     private Animator m_Animator;
-    private StateMachineBehaviour m_ErrorBehaviour;
+    private Behaviour m_ErrorBehaviour;
 
-    public StateMachine(State rootState, Animator animator = null, StateMachineBehaviour errorBehaviour = StateMachineBehaviour.ThrowError) 
+    public StateMachine(State rootState, Animator animator = null, Behaviour errorBehaviour = Behaviour.ThrowError) 
     { 
         m_RootState = rootState;
         m_States.Push(rootState);
         m_Animator = animator;
-        m_ErrorBehaviour = errorBehaviour == StateMachineBehaviour.Default
-            ? StateMachineBehaviour.ThrowError
+        m_ErrorBehaviour = errorBehaviour == Behaviour.Default
+            ? Behaviour.ThrowError
             : errorBehaviour;
     }
 
-    public void NextState(int arg, StateMachineBehaviour errorBehaviour = StateMachineBehaviour.Default)
+    public void NextState(int arg, Behaviour errorBehaviour = Behaviour.Default)
     {
         m_NextState = CurrentState.NextState(arg);
         if (m_NextState != null)
@@ -77,17 +76,17 @@ public class StateMachine
             UpdateAnimator();
             return;
         }
-        if (errorBehaviour == StateMachineBehaviour.Default) errorBehaviour = m_ErrorBehaviour;
+        if (errorBehaviour == Behaviour.Default) errorBehaviour = m_ErrorBehaviour;
         switch (errorBehaviour)
         {
-            case StateMachineBehaviour.ResetRoot:
+            case Behaviour.ResetRoot:
                 ResetState();
                 return;
-            case StateMachineBehaviour.ResetOne:
+            case Behaviour.ResetOne:
                 PrevState();
                 return;
             default:
-            case StateMachineBehaviour.ThrowError:
+            case Behaviour.ThrowError:
                 throw new System.ArgumentException($"Arg \"{arg}\" is invalid for method \"Next State\" of State \"{CurrentState.name}\".");
         }
     }
