@@ -1,28 +1,22 @@
 ﻿using UnityEngine;
 
-public enum PlayerStateList
+namespace _
 {
-    Idle,
-    Walk,
-    Dash
-}
-
-public class PlayerState : MonoBehaviour
-{
-    [SerializeField]
-    private PlayerBase m_Base;
-
-    public StateMachine Machine { get; private set; }
-
-    void Awake()
+    public class PlayerState : MonoBehaviour
     {
-        Machine = new StateMachine(
-            new State ("Idle", new string[] { "interruptible" }, null, new State[]
-                {
-                    new State ("Walk", new string[] { "interruptible" }, (int arg) => arg == (int)PlayerStateList.Walk),
-                    new State ("Dash", null, (int arg) => arg == (int)PlayerStateList.Dash),
+        [SerializeField]
+        private PlayerBase m_Base;
+    
+        public StateMachine Machine { get; private set; }
+        private State m_Idle = new State("Idle", new StateTag[] { StateTag.Interruptible }, new StateQualifier[] { StateQualifier.Player_Idle });
+        private State m_Walk = new State("Walk", new StateTag[] { StateTag.Interruptible }, new StateQualifier[] { StateQualifier.Player_Walk });
+        private State m_Dash = new State("Dash", null, new StateQualifier[] { StateQualifier.Player_Dash });
 
-                }
-            ), m_Base.m_Animator);
+        public void Init()
+        {
+            m_Idle.LinkNodes(m_Walk, m_Dash);
+            m_Walk.LinkNode(m_Dash);
+            Machine = new StateMachine(m_Idle, m_Base.m_Animator);
+        }
     }
 }
