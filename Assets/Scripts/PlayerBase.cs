@@ -27,6 +27,8 @@ namespace _
         private void Awake()
         {
             m_PlayerState.Init();
+            m_Movement.Init();
+            m_Action.Init();
             m_Machine = m_PlayerState.Machine;
         }
 
