@@ -3,6 +3,7 @@
     public enum StateTag
     {
         Interruptible,
+        Interruptor
     }
 
     public enum StateQualifier
