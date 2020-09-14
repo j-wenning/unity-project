@@ -46,11 +46,16 @@ namespace _
             CheckStuck();
             m_IsDashing = m_IsDashing && m_IsMoving;
             m_OldPosDiff = m_PosDiff;
+            if (!m_IsMoving || m_Base.m_State.HasTag(StateTag.Interruptor)) Halt();
             m_Base.m_Rigidbody.velocity = m_PosDiff.normalized *
                         (m_IsMoving ? (m_IsDashing ? m_DashSpeed : m_MoveSpeed) : 0);
-            if (!m_IsMoving) m_NewPos = m_Base.m_LocalPos;
             m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Walk, m_IsMoving && !m_IsDashing);
             m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Dash, m_IsDashing);
+        }
+
+        public void Halt()
+        {
+            m_NewPos = m_Base.m_LocalPos;
         }
 
         private void CheckStuck()
@@ -68,16 +73,14 @@ namespace _
 
         public void GetMoveInput()
         {
-            if (m_Base.m_State.HasTag(StateTag.Interruptible))
+            if (!m_Base.m_State.HasTag(StateTag.Interruptible)) return;
+            if (m_CanDash && Input.GetButton("Fire3"))
             {
-                if (m_CanDash && Input.GetButton("Fire3"))
-                {
-                    m_Base.StartCoroutine(ApplyDashCooldown());
-                }
-                else if (Input.GetButton("Fire2") && (m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
-                {
-                    m_NewPos = m_Base.m_MousePos;
-                }
+                m_Base.StartCoroutine(ApplyDashCooldown());
+            }
+            else if (Input.GetButton("Fire2") && (m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
+            {
+                m_NewPos = m_Base.m_MousePos;
             }
         }
 
