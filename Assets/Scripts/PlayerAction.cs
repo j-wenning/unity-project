@@ -32,7 +32,7 @@ namespace _
             && Input.GetButton("Fire1")
             && m_Base.m_State.HasTag(StateTag.Interruptible))
             {
-                StopCoroutine(m_BasicAttackComboCooldownCB);
+                if (m_BasicAttackComboCooldownCB != null) StopCoroutine(m_BasicAttackComboCooldownCB);
                 StartCoroutine(m_BasicAttackComboCooldownCB = ApplyBasicAttackComboCooldown());
             }
         }
@@ -50,7 +50,7 @@ namespace _
             m_Base.m_Machine.UnsetQualifiers(StateQualifier.Player_Attack_Basic, StateQualifier.Player_Attack_Basic_0 + m_BasicAttackCombo);
             yield return new WaitForSeconds(m_BasicAttackCooldown);
             m_CanBasicAttack = true;
-            if (m_BasicAttackCombo++ < m_BasicAttackCount)
+            if (++m_BasicAttackCombo < m_BasicAttackCount)
             {
                 yield return new WaitForSeconds(m_BasicAttackTolerance);
             }
