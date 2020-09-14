@@ -25,44 +25,44 @@ namespace _
         [SerializeField]
         private float m_DashCooldown;
 
-        private Vector2 mNewPos;
-        private Vector2 mPosDiff;
-        private Vector2 mOldPosDiff;
-        private int mStuckCount = 0;
-        private bool mIsMoving = false;
-        private bool mIsDashing = false;
-        private bool mCanDash = true;
+        private Vector2 m_NewPos;
+        private Vector2 m_PosDiff;
+        private Vector2 m_OldPosDiff;
+        private int m_StuckCount = 0;
+        private bool m_IsMoving = false;
+        private bool m_IsDashing = false;
+        private bool m_CanDash = true;
 
-        private void Awake()
+        public void Init()
         {
-            mNewPos = m_Base.m_LocalPos;
+            m_NewPos = m_Base.m_LocalPos;
         }
 
         public void Move()
         {
-            mPosDiff = mNewPos - m_Base.m_LocalPos;
-            mIsMoving = Vector2.Angle(mPosDiff, mOldPosDiff) < m_StopAngle
-                        && mPosDiff.magnitude > Mathf.Epsilon;
+            m_PosDiff = m_NewPos - m_Base.m_LocalPos;
+            m_IsMoving = Vector2.Angle(m_PosDiff, m_OldPosDiff) < m_StopAngle
+                        && m_PosDiff.magnitude > Mathf.Epsilon;
             CheckStuck();
-            mIsDashing = mIsDashing && mIsMoving;
-            mOldPosDiff = mPosDiff;
-            m_Base.m_Rigidbody.velocity = mPosDiff.normalized *
-                        (mIsMoving ? (mIsDashing ? m_DashSpeed : m_MoveSpeed) : 0);
-            if (!mIsMoving) mNewPos = m_Base.m_LocalPos;
-            m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Walk, mIsMoving && !mIsDashing);
-            m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Dash, mIsDashing);
+            m_IsDashing = m_IsDashing && m_IsMoving;
+            m_OldPosDiff = m_PosDiff;
+            m_Base.m_Rigidbody.velocity = m_PosDiff.normalized *
+                        (m_IsMoving ? (m_IsDashing ? m_DashSpeed : m_MoveSpeed) : 0);
+            if (!m_IsMoving) m_NewPos = m_Base.m_LocalPos;
+            m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Walk, m_IsMoving && !m_IsDashing);
+            m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Dash, m_IsDashing);
         }
 
         private void CheckStuck()
         {
             if (m_Base.m_Rigidbody.velocity.magnitude > m_StuckTolerance)
             {
-                mStuckCount = 0;
+                m_StuckCount = 0;
             }
-            else if (++mStuckCount > m_StuckFrames)
+            else if (++m_StuckCount > m_StuckFrames)
             {
-                mStuckCount = 0;
-                mIsMoving = false;
+                m_StuckCount = 0;
+                m_IsMoving = false;
             }
         }
 
@@ -70,25 +70,25 @@ namespace _
         {
             if (m_Base.m_State.HasTag(StateTag.Interruptible))
             {
-                if (mCanDash && Input.GetButton("Fire1"))
+                if (m_CanDash && Input.GetButton("Fire3"))
                 {
-                    mNewPos = m_Base.m_LocalPos + (m_Base.m_MousePos - m_Base.m_LocalPos).normalized * m_DashLength;
-                    mIsDashing = true;
-                    mCanDash = false;
-                    mPosDiff = mOldPosDiff = Vector2.zero;
                     m_Base.StartCoroutine(ApplyDashCooldown());
                 }
-                else if (Input.GetMouseButton(1) && (m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
+                else if (Input.GetButton("Fire2") && (m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
                 {
-                    mNewPos = m_Base.m_MousePos;
+                    m_NewPos = m_Base.m_MousePos;
                 }
             }
         }
 
         private IEnumerator ApplyDashCooldown()
         {
+            m_NewPos = m_Base.m_LocalPos + (m_Base.m_MousePos - m_Base.m_LocalPos).normalized * m_DashLength;
+            m_PosDiff = m_OldPosDiff = Vector2.zero;
+            m_IsDashing = true;
+            m_CanDash = false;
             yield return new WaitForSeconds(m_DashCooldown);
-            mCanDash = true;
+            m_CanDash = true;
         }
     }
 }
