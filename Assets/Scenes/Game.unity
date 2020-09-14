@@ -2721,6 +2721,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Base: {fileID: 1950582861}
+  m_BasicAttackStartup: 0
+  m_BasicAttackDuration: 0.25
+  m_BasicAttackCooldown: 0
+  m_BasicAttackTolerance: 1
 --- !u!114 &1950582863
 MonoBehaviour:
   m_ObjectHideFlags: 0
