@@ -1,82 +1,97 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
 
-public class PlayerMovement : MonoBehaviour
+namespace _
 {
-    [SerializeField]
-    private Rigidbody2D m_Rigidbody;
-    [SerializeField]
-    private Animator m_Animator;
-
-    [SerializeField, Tooltip("Player speed (scaled by delta time)")]
-    private float m_MoveSpeed = 800f;
-    [SerializeField, Tooltip("Minimum required distance to move player (prevents jittering)")]
-    private float m_MoveThreshold = 0.2f;
-    [SerializeField]
-    private float m_DashSpeed;
-    [SerializeField]
-    private float m_DashDuration;
-    [SerializeField, Tooltip("Dash cooldown")]
-    private float m_DashCD;
-
-    private Vector2 mNewPos;
-    private Vector2 mPrevPos;
-    private Vector2 mPosDiff;
-    private Vector2 mDashVector;
-    private bool mIsMoving;
-    private bool mCanDash;
-    private float mDashEndTime;
-
-    private void Awake()
+    public class PlayerMovement : MonoBehaviour
     {
-        mNewPos = transform.position;
-        mCanDash = true;
-    }
+        [SerializeField]
+        private PlayerBase m_Base;
 
-    private void FixedUpdate()
-    {
-        MoveToPos();
-        StartDash();
-    }
+        [SerializeField]
+        private float m_MoveSpeed;
+        [SerializeField, Tooltip("Minimum distance for a player to select to move (prevents jittering)")]
+        private float m_MoveThreshold;
+        [SerializeField, Range(0, 180), Tooltip("Maximum automatic change in trajectory before stopping the player")]
+        private int m_StopAngle;
+        [SerializeField, Tooltip("Minimum speed to not be considered \"stuck\"")]
+        private float m_StuckTolerance;
+        [SerializeField, Tooltip("Number of frames at \"Stuck Tolerance\" required to be determined as \"stuck\"")]
+        private int m_StuckFrames;
+        [SerializeField]
+        private float m_DashSpeed;
+        [SerializeField]
+        private float m_DashLength;
+        [SerializeField]
+        private float m_DashCooldown;
 
-    private Vector2 GetMousePos()
-    {
-        return Camera.main.ScreenToWorldPoint(Input.mousePosition);
-    }
+        private Vector2 m_NewPos;
+        private Vector2 m_PosDiff;
+        private Vector2 m_OldPosDiff;
+        private int m_StuckCount = 0;
+        private bool m_IsMoving = false;
+        private bool m_IsDashing = false;
+        private bool m_CanDash = true;
 
-    private void MoveToPos()
-    {
-        if (!(m_Animator.GetBool("Walking") || m_Animator.GetBool("Idling"))) return;
-        if (Input.GetMouseButton(1)) mNewPos = GetMousePos();
-        mPrevPos = transform.localPosition;
-        mPosDiff = mNewPos - mPrevPos;
-        mIsMoving = mPosDiff.magnitude > m_MoveThreshold;
-        m_Rigidbody.velocity = mIsMoving
-            ? mPosDiff.normalized * m_MoveSpeed * Time.deltaTime
-            : Vector2.zero;
-        m_Animator.SetBool("Walking", mIsMoving);
-    }
-    private void StartDash()
-    {
-        if (mCanDash && Input.GetButton("Fire1")) StartCoroutine(Dash());
-    }
-
-    private IEnumerator Dash()
-    {
-        mCanDash = false;
-        m_Animator.SetBool("Dashing", true);
-        mDashVector = (GetMousePos() - (Vector2)transform.position).normalized * m_DashSpeed * Time.deltaTime;
-        mDashEndTime = Time.fixedTime + m_DashDuration;
-        do
+        public void Init()
         {
-            m_Rigidbody.velocity = mDashVector;
-            yield return new WaitForFixedUpdate();
-        } while (Time.fixedTime < mDashEndTime);
-        m_Animator.SetBool("Dashing", false);
-        m_Rigidbody.velocity = Vector2.zero;
-        mNewPos = transform.position;
-        MoveToPos();
-        yield return new WaitForSeconds(m_DashCD);
-        mCanDash = true;
+            m_NewPos = m_Base.m_LocalPos;
+        }
+
+        public void Move()
+        {
+            m_PosDiff = m_NewPos - m_Base.m_LocalPos;
+            m_IsMoving = Vector2.Angle(m_PosDiff, m_OldPosDiff) < m_StopAngle
+                        && m_PosDiff.magnitude > Mathf.Epsilon;
+            CheckStuck();
+            m_IsDashing = m_IsDashing && m_IsMoving;
+            m_OldPosDiff = m_PosDiff;
+            if (!m_IsMoving || m_Base.m_State.HasTag(StateTag.Interruptor)) Halt();
+            m_Base.m_Rigidbody.velocity = m_PosDiff.normalized *
+                        (m_IsMoving ? (m_IsDashing ? m_DashSpeed : m_MoveSpeed) : 0);
+            m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Walk, m_IsMoving && !m_IsDashing);
+            m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Dash, m_IsDashing);
+        }
+
+        public void Halt()
+        {
+            m_NewPos = m_Base.m_LocalPos;
+        }
+
+        private void CheckStuck()
+        {
+            if (m_Base.m_Rigidbody.velocity.magnitude > m_StuckTolerance)
+            {
+                m_StuckCount = 0;
+            }
+            else if (++m_StuckCount > m_StuckFrames)
+            {
+                m_StuckCount = 0;
+                m_IsMoving = false;
+            }
+        }
+
+        public void GetMoveInput()
+        {
+            if (!m_Base.m_State.HasTag(StateTag.Interruptible)) return;
+            if (m_CanDash && Input.GetButton("Fire3"))
+            {
+                m_Base.StartCoroutine(ApplyDashCooldown());
+            }
+            else if (Input.GetButton("Fire2") && (m_Base.m_MousePos - m_Base.m_LocalPos).magnitude > m_MoveThreshold)
+            {
+                m_NewPos = m_Base.m_MousePos;
+            }
+        }
+
+        private IEnumerator ApplyDashCooldown()
+        {
+            m_NewPos = m_Base.m_LocalPos + (m_Base.m_MousePos - m_Base.m_LocalPos).normalized * m_DashLength;
+            m_PosDiff = m_OldPosDiff = Vector2.zero;
+            m_IsDashing = true;
+            m_CanDash = false;
+            yield return new WaitForSeconds(m_DashCooldown);
+            m_CanDash = true;
+        }
     }
 }
