@@ -2520,6 +2520,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1950582858}
   - component: {fileID: 1950582861}
+  - component: {fileID: 1950582863}
   - component: {fileID: 1950582857}
   - component: {fileID: 1950582862}
   - component: {fileID: 1950582856}
@@ -2593,11 +2594,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Base: {fileID: 1950582861}
-  m_MoveSpeed: 800
-  m_MoveThreshold: 0.2
-  m_DashSpeed: 9600
-  m_DashDuration: 0.1
-  m_DashCD: 1
+  m_MoveSpeed: 25
+  m_MoveThreshold: 0.22
+  m_StopAngle: 45
+  m_StuckTolerance: 0.01
+  m_StuckFrames: 5
+  m_DashSpeed: 200
+  m_DashLength: 10
+  m_DashCooldown: 0.25
 --- !u!4 &1950582858
 Transform:
   m_ObjectHideFlags: 0
@@ -2694,14 +2698,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9066d189298fa0648beee5b2595a230b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_PlayerState: {fileID: 1950582863}
   m_Movement: {fileID: 1950582857}
   m_Action: {fileID: 1950582862}
   m_Rigidbody: {fileID: 1950582856}
   m_Collider: {fileID: 1950582855}
   m_Animator: {fileID: 1950582860}
+  m_LocalPos: {x: 0, y: 0}
+  m_MousePos: {x: 0, y: 0}
   m_DeltaTime: 0
   m_FixedTime: 0
-  m_MousePos: {x: 0, y: 0}
 --- !u!114 &1950582862
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2712,6 +2718,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 99e76452f6cf04d4a9d89f8060ec3209, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Base: {fileID: 1950582861}
+--- !u!114 &1950582863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950582854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9581bc666aa758449aae7be75fa736aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Base: {fileID: 1950582861}
