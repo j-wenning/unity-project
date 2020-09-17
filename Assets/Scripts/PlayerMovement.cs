@@ -44,9 +44,10 @@ namespace _
             m_IsMoving = Vector2.Angle(m_PosDiff, m_OldPosDiff) < m_StopAngle
                         && m_PosDiff.magnitude > Mathf.Epsilon;
             CheckStuck();
+            if (m_Base.m_State.HasTag(StateTag.Interruptor)) Halt();
             m_IsDashing = m_IsDashing && m_IsMoving;
             m_OldPosDiff = m_PosDiff;
-            if (!m_IsMoving || m_Base.m_State.HasTag(StateTag.Interruptor)) Halt();
+            if (!m_IsMoving) m_NewPos = m_Base.m_LocalPos;
             m_Base.m_Rigidbody.velocity = m_PosDiff.normalized *
                         (m_IsMoving ? (m_IsDashing ? m_DashSpeed : m_MoveSpeed) : 0);
             m_Base.m_Machine.ToggleQualifier(StateQualifier.Player_Walk, m_IsMoving && !m_IsDashing);
@@ -55,7 +56,7 @@ namespace _
 
         public void Halt()
         {
-            m_NewPos = m_Base.m_LocalPos;
+            m_IsMoving = false;
         }
 
         private void CheckStuck()
